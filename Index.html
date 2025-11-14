@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
       fps: 10,
       qrbox: 400,
       videoConstraints: { 
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
         facingMode: "environment"
       }
     };
@@ -113,13 +113,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Precisa de interação do usuário para ativar câmera em alguns navegadores
+  // Botão para iniciar scanner
   const startBtn = document.createElement('button');
   startBtn.innerText = "Iniciar Scanner";
   startBtn.style.marginBottom = "15px";
   startBtn.onclick = () => {
     startScanner();
-    startBtn.remove(); // remove o botão após iniciar
+    startBtn.remove();
   }
   document.body.insertBefore(startBtn, document.getElementById('reader'));
 
