@@ -1,197 +1,164 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leitor de NF-e NFC-e</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <style>
-    /* Layout moderno */
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f0f2f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    h1 {
-      color: #333;
-      margin-top: 20px;
-    }
-
-    video {
-      width: 90%;
-      max-width: 600px;
-      border-radius: 12px;
-      margin: 15px 0;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      font-size: 16px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 90%;
-      max-width: 600px;
-      margin-bottom: 30px;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    th, td {
-      text-align: left;
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background-color: #4CAF50;
-      color: white;
-      position: sticky;
-      top: 0;
-    }
-
-    tbody tr:nth-child(even){background-color: #f9f9f9;}
-
-    tbody tr:hover {background-color: #f1f1f1;}
-
-    .container {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    @media (max-width: 500px){
-      th, td { font-size: 14px; padding: 8px; }
-      button { padding: 10px 16px; font-size: 14px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leitor de Notas Fiscais de Combustível</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+  body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 {
+    color: #333;
+    margin-top: 20px;
+  }
+  video {
+    width: 90%;
+    max-width: 600px;
+    border-radius: 12px;
+    margin: 15px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  button:hover { background-color: #006ae6; }
+  table {
+    border-collapse: collapse;
+    width: 95%;
+    max-width: 800px;
+    margin-bottom: 30px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  th, td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  th { background-color: #007BFF; color: white; position: sticky; top: 0; }
+  tbody tr:nth-child(even){background-color: #f9f9f9;}
+  tbody tr:hover {background-color: #f1f1f1;}
+  @media (max-width: 500px){
+    th, td { font-size: 12px; padding: 8px; }
+    button { padding: 10px 16px; font-size: 14px; }
+  }
+</style>
 </head>
 <body>
-  <h1>Leitor de Notas Fiscais</h1>
-  <div class="container">
-    <video id="video" autoplay playsinline></video>
-    <button id="exportBtn">Exportar CSV</button>
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>CNPJ</th>
-          <th>Data</th>
-          <th>Valor</th>
-          <th>Número NF</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<h1>Leitor de Notas Fiscais de Combustível</h1>
+<video id="video" autoplay playsinline></video>
+<button id="exportBtn">Exportar CSV</button>
+<table id="dataTable">
+<thead>
+<tr>
+  <th>#</th>
+  <th>CNPJ</th>
+  <th>Data</th>
+  <th>Valor Pago</th>
+  <th>Local</th>
+  <th>Litragem (L)</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
-  <script>
-    const video = document.getElementById('video');
-    const tableBody = document.querySelector('#dataTable tbody');
-    const exportBtn = document.getElementById('exportBtn');
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const nfArray = [];
+<script>
+const video = document.getElementById('video');
+const tableBody = document.querySelector('#dataTable tbody');
+const exportBtn = document.getElementById('exportBtn');
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+const nfArray = [];
 
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-        });
-        video.srcObject = stream;
-        video.play();
-        requestAnimationFrame(scanQRCode);
-      } catch(err) {
-        alert('Erro ao abrir câmera: ' + err);
-      }
+async function startCamera(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{exact:"environment"}, width:{ideal:1920}, height:{ideal:1080}}
+    });
+    video.srcObject = stream;
+    video.play();
+    requestAnimationFrame(scanQRCode);
+  }catch(err){ alert("Erro ao abrir câmera: "+err);}
+}
+
+function scanQRCode(){
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code = jsQR(imageData.data,canvas.width,canvas.height);
+
+    if(code && !nfArray.find(nf=>nf.raw===code.data)){
+      const nf = parseFuelNF(code.data);
+      nf.raw = code.data;
+      nfArray.push(nf);
+      addNFToTable(nf);
     }
+  }
+  requestAnimationFrame(scanQRCode);
+}
 
-    function scanQRCode() {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
+// Função para parse simples de QR de NFC-e/NF-e de combustível
+function parseFuelNF(data){
+  try{
+    const url = new URL(data);
+    const params = new URLSearchParams(url.search);
+    // Campos comuns
+    const cnpj = params.get('cnpj') || '-';
+    const dataNF = params.get('dhEmi') || '-';
+    const valor = params.get('vNF') || '-';
+    const local = params.get('xMun') || '-';
+    // Tentativa de detectar litragem
+    const lit = params.get('qCom') || params.get('vLiq') || '-';
+    return {cnpj:cnpj, data:dataNF, valor:valor, local:local, litragem:lit};
+  }catch{
+    return {cnpj:'-', data:'-', valor:'-', local:'-', litragem:'-'};
+  }
+}
 
-        if(code){
-          // Evitar duplicatas
-          if(!nfArray.find(nf => nf.raw === code.data)){
-            const nf = parseNF(code.data);
-            nf.raw = code.data;
-            nfArray.push(nf);
-            addNFToTable(nf);
-          }
-        }
-      }
-      requestAnimationFrame(scanQRCode);
-    }
+function addNFToTable(nf){
+  const row = document.createElement('tr');
+  row.innerHTML=`<td>${nfArray.length}</td><td>${nf.cnpj}</td><td>${nf.data}</td><td>${nf.valor}</td><td>${nf.local}</td><td>${nf.litragem}</td>`;
+  tableBody.appendChild(row);
+}
 
-    // Parse simples de URL de NFC-e/NF-e
-    function parseNF(data){
-      try{
-        let url = new URL(data);
-        let params = new URLSearchParams(url.search);
-        return {
-          cnpj: params.get('cnpj') || '-',
-          data: params.get('dhEmi') || '-',
-          valor: params.get('vNF') || '-',
-          numero: params.get('nNF') || '-'
-        }
-      }catch{
-        // Caso seja texto puro
-        return { cnpj: '-', data: '-', valor: '-', numero: '-' };
-      }
-    }
+function exportCSV(){
+  if(nfArray.length===0){ alert("Nenhum dado para exportar!"); return;}
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "ID,CNPJ,Data,Valor Pago,Local,Litragem\n";
+  nfArray.forEach((nf,index)=>{
+    csvContent += `${index+1},"${nf.cnpj}","${nf.data}","${nf.valor}","${nf.local}","${nf.litragem}"\n`;
+  });
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href",encodedUri);
+  link.setAttribute("download","notas_combustivel.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
-    function addNFToTable(nf){
-      const row = document.createElement('tr');
-      row.innerHTML = `<td>${nfArray.length}</td><td>${nf.cnpj}</td><td>${nf.data}</td><td>${nf.valor}</td><td>${nf.numero}</td>`;
-      tableBody.appendChild(row);
-    }
-
-    function exportCSV(){
-      if(nfArray.length === 0){ alert('Nenhum dado para exportar!'); return; }
-
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "ID,CNPJ,Data,Valor,Número NF\n";
-      nfArray.forEach((nf,index)=>{
-        csvContent += `${index+1},"${nf.cnpj}","${nf.data}","${nf.valor}","${nf.numero}"\n`;
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "notas_fiscais.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    exportBtn.addEventListener('click', exportCSV);
-
-    startCamera();
-  </script>
+exportBtn.addEventListener('click',exportCSV);
+startCamera();
+</script>
 </body>
 </html>
